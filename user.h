@@ -25,6 +25,18 @@ int sleep(int);
 int uptime(void);
 int halt(void);
 
+// BEGIN CHANGES
+// PART 1 
+int sem_init(int sem, int value);
+int sem_destroy(int sem);
+int sem_wait(int sem, int count); 
+// PART 2
+int clone(void (*)(void*), void *arg, void *stack);
+int join(void **stack);
+// END CHANGES
+
+
+
 // ulib.c
 int stat(char*, struct stat*);
 char* strcpy(char*, char*);
