@@ -3,7 +3,7 @@
 #include "user.h"
 #include "fs.h"
 #include "fcntl.h"
-#include "defs.h"
+
 
 #define NUM_CHILDREN 2
 #define TARGET_COUNT_PER_CHILD 50
