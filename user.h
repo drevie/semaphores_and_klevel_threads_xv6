@@ -33,6 +33,10 @@ int sem_wait(int sem, int count);
 // PART 2
 int clone(void (*)(void*), void *arg, void *stack);
 int join(void **stack);
+
+//changes ext 
+int sem_signal(int sem);
+int sem_wait(int sem);
 // END CHANGES
 
 
