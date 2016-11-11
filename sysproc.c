@@ -90,6 +90,88 @@ sys_uptime(void)
   return xticks;
 }
 
+// BEGIN CHANGES
+// PART 1
+int  sys_sem_init(void)
+{
+  int sem;
+  int value;
+
+  if (argint(0, &sem) < 0) 
+    return -1;
+  if (argint(1, &value) < 0)
+    return -1;
+
+  return sem_init(sem, value);
+}
+
+int sys_sem_destroy(void)
+{
+  int sem;
+
+  if (argint(0, &sem) < 0)
+    return -1;
+
+  return sem_destroy(sem);
+}
+
+int sys_sem_wait(void)
+{
+  int sem;
+  int count;
+
+  if (argint(0, &sem) < 0)
+    return -1;
+  if (argint(1, &count) < 0)
+    return -1;
+
+  return sem_wait(sem, count);
+}
+
+int sys_sem_signal(void)
+{
+  int sem;
+  int count;
+
+  if (argint(0, &sem) < 0)
+    return -1;
+  if (argint(1, &count) < 0)
+    return -1;
+
+  return sem_signal(sem, count);
+}
+
+// PART 2
+int sys_clone(void)
+{
+  int func_add;
+  int arg;
+  int stack_add;
+
+  if (argint(0, &func_add) < 0)
+     return -1;
+  if (argint(1, &arg) < 0)
+     return -1;
+  if (argint(2, &stack_add) < 0)
+     return -1;
+ 
+  return clone((void *)func_add, (void *)arg, (void *)stack_add);
+  
+}
+
+int sys_join(void)
+{
+  int stack_add;
+
+  if (argint(0, &stack_add) < 0)
+     return -1;
+
+  return join((void **)stack_add);
+}
+
+// CHANGES END
+
+
 // Halt (shutdown) the system by sending a special
 // signal to QEMU.
 // Based on: http://pdos.csail.mit.edu/6.828/2012/homework/xv6-syscall.html

@@ -12,6 +12,18 @@ struct {
   struct proc proc[NPROC];
 } ptable;
 
+// BEGIN CHANGES
+// PART 1
+struct semaphore{
+  int value;
+  int active;
+  struct spinlock lock; 
+};
+
+struct semaphore sema[32]; 
+
+// END CHANGES
+
 static struct proc *initproc;
 
 int nextpid = 1;
@@ -426,6 +438,169 @@ kill(int pid)
   release(&ptable.lock);
   return -1;
 }
+
+// BEGIN CHANGES
+// PART 1
+int sem_init(int sem, int value)
+{
+  acquire(&sema[sem].lock);
+
+  if (sema[sem].active == 0)
+  {
+     sema[sem].active = 1;
+     sema[sem].value = value;
+  }
+  else
+  {
+     return -1;
+  }  
+
+  release(&sema[sem].lock);
+
+  return 0;
+}
+
+
+int
+sem_destroy(int sem)
+{
+  acquire(&sema[sem].lock);
+  sema[sem].active = 0;
+  release(&sema[sem].lock);
+
+  return 0; 
+}
+
+int sem_wait(int sem, int count)
+{
+  acquire(&sema[sem].lock);
+
+  if (sema[sem].value >= count)
+  {
+     sema[sem].value = sema[sem].value - count;
+  }
+  else
+  {
+     while (sema[sem].value < count)
+     {  
+        sleep(&sema[sem],&sema[sem].lock);
+     }
+     sema[sem].value = sema[sem].value - count;
+  }
+
+  release(&sema[sem].lock);
+
+  return 0;
+}
+
+
+int sem_signal(int sem, int count)
+{
+  acquire(&sema[sem].lock);
+
+  sema[sem].value = sema[sem].value + count;
+  wakeup(&sema[sem]); 
+  release(&sema[sem].lock);
+
+  return 0;
+}
+
+// PART 2
+
+int clone(void (*func)(void *), void *arg, void *stack)
+{
+
+   int i, pid;
+   struct proc *np;
+   int *myarg;
+   int *myret;
+
+   if((np = allocproc()) == 0)
+     return -1;
+
+   np->pgdir = proc->pgdir; 
+   np->sz = proc->sz;
+   np->parent = proc;
+   *np->tf = *proc->tf;
+   np->stack = stack;
+
+   np->tf->eax = 0; 
+
+   /*
+   *myarg = (int)arg;
+   *myret = np->tf->eip;
+   */
+   
+   np->tf->eip = (int)func;
+
+   myret = stack + 4096 - 2 * sizeof(int *);
+   *myret = 0xFFFFFFFF;
+   
+   myarg = stack + 4096 - sizeof(int *);
+   *myarg = (int)arg;
+
+   np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
+   np->tf->ebp = np->tf->esp;
+
+   np->isthread = 1;
+  
+   for(i = 0; i < NOFILE; i++)
+     if(proc->ofile[i])
+       np->ofile[i] = filedup(proc->ofile[i]);
+   np->cwd = idup(proc->cwd);
+
+   safestrcpy(np->name, proc->name, sizeof(proc->name));
+
+   pid = np->pid;
+
+   acquire(&ptable.lock);
+   np->state = RUNNABLE;
+   release(&ptable.lock);
+
+   return pid;  
+}
+
+int join(void **stack)
+{
+
+  struct proc *p;
+  int haveKids, pid;
+
+  acquire(&ptable.lock);
+  for(;;) {
+    haveKids = 0;
+
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->parent != proc || p->isthread != 1 )
+        continue;
+      haveKids = 1;
+
+      if (p->state == ZOMBIE) {
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        p->state = UNUSED;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        *stack = p->stack;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+    
+    if (!haveKids || proc->killed) {
+      release(&ptable.lock);
+      return -1;
+}
+sleep(proc, &ptable.lock);
+
+  }
+  return 0;
+}
+
+// END CHANGES
 
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.

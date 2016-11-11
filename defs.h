@@ -119,6 +119,18 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 
+// BEGIN CHANGES
+// PART 1
+int             sem_init(int, int);
+int             sem_destroy(int);
+int             sem_wait(int, int);
+int             sem_signal(int, int);
+// PART 2
+int             clone(void (*func) (void*), void *arg, void *stack);
+int 			join(void **stack);
+// END CHANGES
+
+
 // swtch.S
 void            swtch(struct context**, struct context*);
 
