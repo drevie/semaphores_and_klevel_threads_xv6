@@ -29,14 +29,13 @@ int halt(void);
 // PART 1 
 int sem_init(int sem, int value);
 int sem_destroy(int sem);
-int sem_wait(int sem, int count); 
+int sem_wait(int sem); 
 // PART 2
 int clone(void (*)(void*), void *arg, void *stack);
 int join(void **stack);
 
 //changes ext 
 int sem_signal(int sem);
-int sem_wait(int sem);
 // END CHANGES
 
 
