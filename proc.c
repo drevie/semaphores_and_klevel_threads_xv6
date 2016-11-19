@@ -441,6 +441,16 @@ kill(int pid)
 
 // BEGIN CHANGES
 // PART 1
+
+void sem_tbl_init(){
+  int semId;
+  for(semId=0; semId<32; semId++){
+    sem_tbl[semId].value=0;
+    sem_tbl[semId].active=0;
+    initlock(&sem_tbl[semId].lock, "semlock");
+  }
+}
+
 int sem_init(int sem, int value)
 {
   acquire(&sema[sem].lock);
@@ -471,37 +481,27 @@ sem_destroy(int sem)
   return 0; 
 }
 
-int sem_wait(int sem, int count)
-{
-  acquire(&sema[sem].lock);
-
-  if (sema[sem].value >= count)
-  {
-     sema[sem].value = sema[sem].value - count;
-  }
-  else
-  {
-     while (sema[sem].value < count)
-     {  
-        sleep(&sema[sem],&sema[sem].lock);
-     }
-     sema[sem].value = sema[sem].value - count;
-  }
-
-  release(&sema[sem].lock);
-
+int sem_wait(int semId){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==0) return -1;
+  if(sem_tbl[semId].value<0) return -1;
+  acquire(&sem_tbl[semId].lock);
+  while(sem_tbl[semId].value==0) sleep(&sem_tbl[semId], &sem_tbl[semId].lock);
+  sem_tbl[semId].value--;
+  release(&sem_tbl[semId].lock);
   return 0;
 }
 
 
-int sem_signal(int sem, int count)
-{
-  acquire(&sema[sem].lock);
 
-  sema[sem].value = sema[sem].value + count;
-  wakeup(&sema[sem]); 
-  release(&sema[sem].lock);
-
+int sem_signal(int semId){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==0) return -1;
+  if(sem_tbl[semId].value<0) return -1;
+  acquire(&sem_tbl[semId].lock);
+  sem_tbl[semId].value++;
+  if(sem_tbl[semId].value>0) wakeup(&sem_tbl[semId]);
+  release(&sem_tbl[semId].lock);
   return 0;
 }
 
