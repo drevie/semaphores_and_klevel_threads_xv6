@@ -91,8 +91,8 @@ sys_uptime(void)
 }
 
 // BEGIN CHANGES
-// PART 1
-int  sys_sem_init(void)
+int 
+sys_sem_init(void)
 {
   int sem;
   int value;
@@ -105,7 +105,8 @@ int  sys_sem_init(void)
   return sem_init(sem, value);
 }
 
-int sys_sem_destroy(void)
+int
+sys_sem_destroy(void)
 {
   int sem;
 
@@ -141,7 +142,6 @@ int sys_sem_signal(void)
   return sem_signal(sem, count);
 }
 
-// PART 2
 int sys_clone(void)
 {
   int func_add;
