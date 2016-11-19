@@ -532,6 +532,35 @@ int join(int pid, void **stack, void **retval){
   release(&ptable.lock);
   return -1;
 }
+
+void texit(void *retval){
+  struct proc *p;
+  int fd;
+  if(proc == initproc) panic("init exiting");
+  for(fd = 0; fd < NOFILE; fd++){
+    if(proc->ofile[fd]){
+      fileclose(proc->ofile[fd]);
+      proc->ofile[fd] = 0;
+    }
+  }
+  begin_op();
+  iput(proc->cwd);
+  end_op();
+  proc->cwd = 0;
+  acquire(&ptable.lock);
+  wakeup1(proc->parent);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == proc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+  *(int *)(proc->tf->esp) =*(int*)retval;
+  proc->state = ZOMBIE;
+  sched();
+  panic("zombie exit");
+}
 // END CHANGES
 
 //PAGEBREAK: 36
