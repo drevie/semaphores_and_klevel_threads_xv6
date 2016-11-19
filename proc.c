@@ -12,17 +12,7 @@ struct {
   struct proc proc[NPROC];
 } ptable;
 
-// BEGIN CHANGES
-// PART 1
-struct semaphore{
-  int value;
-  int active;
-  struct spinlock lock; 
-};
 
-struct semaphore sema[32]; 
-
-// END CHANGES
 
 static struct proc *initproc;
 
