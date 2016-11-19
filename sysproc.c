@@ -91,84 +91,62 @@ sys_uptime(void)
 }
 
 // BEGIN CHANGES
-int 
-sys_sem_init(void)
-{
-  int sem;
-  int value;
-
-  if (argint(0, &sem) < 0) 
-    return -1;
-  if (argint(1, &value) < 0)
-    return -1;
-
-  return sem_init(sem, value);
+int sys_sem_init(void){
+  int semId,n;
+  if(argint(0, &semId) < 0) return -1;
+  if(argint(1, &n) < 0) return -1;
+  return sem_init(semId,n);
 }
 
-int
-sys_sem_destroy(void)
-{
-  int sem;
-
-  if (argint(0, &sem) < 0)
-    return -1;
-
-  return sem_destroy(sem);
+int sys_sem_destroy(void){
+  int semId;
+  if(argint(0,&semId) < 0) return -1;
+  return sem_destroy(semId);
 }
 
-int sys_sem_wait(void)
-{
-  int sem;
-  int count;
-
-  if (argint(0, &sem) < 0)
-    return -1;
-  if (argint(1, &count) < 0)
-    return -1;
-
-  return sem_wait(sem, count);
+int sys_sem_wait(void){
+  int semId;
+  if(argint(0,&semId) < 0) return -1;
+  return sem_wait(semId);
 }
 
-int sys_sem_signal(void)
-{
-  int sem;
-  int count;
-
-  if (argint(0, &sem) < 0)
-    return -1;
-  if (argint(1, &count) < 0)
-    return -1;
-
-  return sem_signal(sem, count);
+int sys_sem_signal(void){
+  int semId;
+  if(argint(0,&semId) < 0) return -1;
+  return sem_signal(semId);
 }
 
-int sys_clone(void)
-{
-  int func_add;
-  int arg;
-  int stack_add;
-
-  if (argint(0, &func_add) < 0)
-     return -1;
-  if (argint(1, &arg) < 0)
-     return -1;
-  if (argint(2, &stack_add) < 0)
-     return -1;
- 
-  return clone((void *)func_add, (void *)arg, (void *)stack_add);
-  
+int sys_clone(void){
+  void * arg0, *arg1,*stack;
+  int temp;
+  if(argint(0, &temp) < 0) return -1;
+  arg0 = (void *)temp;
+  if(argint(1, &temp) < 0) return -1;
+  arg1 = (void *)temp;
+  if(argint(2, &temp) < 0) return -1;
+  stack = (void *)temp;
+  return clone(arg0,arg1,stack);
 }
 
-int sys_join(void)
-{
-  int stack_add;
-
-  if (argint(0, &stack_add) < 0)
-     return -1;
-
-  return join((void **)stack_add);
+int sys_texit(void){
+  void *retval;
+  int temp;
+  if(argint(0,&temp) < 0) return -1;
+  retval = (void*)temp;
+  texit(retval);
+  return 0;
 }
 
+int sys_join(void){
+  void ** stack,**retval;
+  int pid,temp;
+  if(argint(0,&pid) < 0) return -1;
+  if(argint(1,&temp) < 0) return -1;
+  stack = (void **)temp;
+  if(argint(2,&temp) < 0) return -1;
+  retval = (void **)temp;
+  return join(pid,stack,retval);
+}
 // CHANGES END
 
 

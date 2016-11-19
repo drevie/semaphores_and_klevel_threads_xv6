@@ -27,12 +27,13 @@ int halt(void);
 
 // BEGIN CHANGES
 // PART 1 
-int sem_init(int sem, int value);
-int sem_destroy(int sem);
-int sem_wait(int sem, int count);
-int sem_signal(int sem, int count);
-int clone(void (*)(void*), void *arg, void *stack);
-int join(void **stack);
+int sem_init(int semId, int n);
+int sem_destroy(int semId);
+int sem_wait(int semId);
+int sem_signal(int semId);
+int clone(void *(*func) (void *), void *arg, void *stack);
+int join(int pid, void **stack, void **retval);
+void texit(void *retval);
 // END CHANGES
 
 

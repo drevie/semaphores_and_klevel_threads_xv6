@@ -8,6 +8,7 @@ struct rtcdate;
 struct spinlock;
 struct stat;
 struct superblock;
+struct semaphore; // CHANGE
 
 // bio.c
 void            binit(void);
@@ -119,12 +120,14 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 // BEGIN CHANGES:
-int             sem_init(int, int);
-int             sem_destroy(int);
-int             sem_wait(int, int);
-int             sem_signal(int, int);
-int             clone(void (*func) (void*), void *arg, void *stack);
-int 			join(void **stack);
+void            sem_tbl_init(void);
+int             sem_init(int semId, int n);
+int             sem_destroy(int semId);
+int             sem_wait(int semId);
+int             sem_signal(int semId);
+int             clone(void *(*func) (void *), void *arg, void *stack);
+int             join(int pid, void **stack, void **retval);
+void 			texit(void *retval);
 // END CHANGES AND proc.c
 
 // swtch.S

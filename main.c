@@ -29,6 +29,7 @@ main(void)
   uartinit();      // serial port
   pinit();         // process table
   tvinit();        // trap vectors
+  sem_tbl_init();  // CHANGE----------------
   binit();         // buffer cache
   fileinit();      // file table
   iinit();         // inode cache
