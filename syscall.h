@@ -30,4 +30,5 @@
 // PART 2
 #define SYS_clone 27
 #define SYS_join 28
+#define SYS_texit 29
 // END CHANGES

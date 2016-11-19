@@ -107,6 +107,7 @@ extern int sys_sem_wait(void);
 extern int sys_sem_signal(void);
 extern int sys_clone(void);
 extern int sys_join(void);
+extern int sys_texit(void);
 // END CHANGES
 
 static int (*syscalls[])(void) = {
