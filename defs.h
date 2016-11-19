@@ -119,7 +119,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 
-// BEGIN CHANGES
+/* BEGIN CHANGES
 // PART 1
 int             sem_init(int, int);
 int             sem_destroy(int);
@@ -128,7 +128,8 @@ int             sem_signal(int, int);
 // PART 2
 int             clone(void (*func) (void*), void *arg, void *stack);
 int 			join(void **stack);
-// END CHANGES
+// END CHANGES */
+struct semaphore;
 
 
 // swtch.S
