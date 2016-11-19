@@ -441,6 +441,11 @@ kill(int pid)
 
 // BEGIN CHANGES
 // PART 1
+struct semaphore {
+  int value;
+  int active;
+  struct spinlock lock;
+} sem_tbl[32];
 
 void sem_tbl_init(){
   int semId;
@@ -451,34 +456,20 @@ void sem_tbl_init(){
   }
 }
 
-int sem_init(int sem, int value)
-{
-  acquire(&sema[sem].lock);
-
-  if (sema[sem].active == 0)
-  {
-     sema[sem].active = 1;
-     sema[sem].value = value;
-  }
-  else
-  {
-     return -1;
-  }  
-
-  release(&sema[sem].lock);
-
+int sem_init(int semId, int n){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==1)  return -1;
+  sem_tbl[semId].active = 1;
+  sem_tbl[semId].value = n;
   return 0;
 }
 
-
-int
-sem_destroy(int sem)
-{
-  acquire(&sema[sem].lock);
-  sema[sem].active = 0;
-  release(&sema[sem].lock);
-
-  return 0; 
+int sem_destroy(int semId){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==0) return -1;
+  sem_tbl[semId].active = 0;
+  sem_tbl[semId].value = 0;
+  return 0;
 }
 
 int sem_wait(int semId){
@@ -492,8 +483,6 @@ int sem_wait(int semId){
   return 0;
 }
 
-
-
 int sem_signal(int semId){
   if(semId < 0 || semId > 31) return -1;
   if(sem_tbl[semId].active==0) return -1;
@@ -505,101 +494,54 @@ int sem_signal(int semId){
   return 0;
 }
 
-// PART 2
-
-int clone(void (*func)(void *), void *arg, void *stack)
-{
-
-   int i, pid;
-   struct proc *np;
-   int *myarg;
-   int *myret;
-
-   if((np = allocproc()) == 0)
-     return -1;
-
-   np->pgdir = proc->pgdir; 
-   np->sz = proc->sz;
-   np->parent = proc;
-   *np->tf = *proc->tf;
-   np->stack = stack;
-
-   np->tf->eax = 0; 
-
-   /*
-   *myarg = (int)arg;
-   *myret = np->tf->eip;
-   */
-   
-   np->tf->eip = (int)func;
-
-   myret = stack + 4096 - 2 * sizeof(int *);
-   *myret = 0xFFFFFFFF;
-   
-   myarg = stack + 4096 - sizeof(int *);
-   *myarg = (int)arg;
-
-   np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
-   np->tf->ebp = np->tf->esp;
-
-   np->isthread = 1;
-  
-   for(i = 0; i < NOFILE; i++)
-     if(proc->ofile[i])
-       np->ofile[i] = filedup(proc->ofile[i]);
-   np->cwd = idup(proc->cwd);
-
-   safestrcpy(np->name, proc->name, sizeof(proc->name));
-
-   pid = np->pid;
-
-   acquire(&ptable.lock);
-   np->state = RUNNABLE;
-   release(&ptable.lock);
-
-   return pid;  
-}
-
-int join(void **stack)
-{
-
-  struct proc *p;
-  int haveKids, pid;
-
-  acquire(&ptable.lock);
-  for(;;) {
-    haveKids = 0;
-
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if (p->parent != proc || p->isthread != 1 )
-        continue;
-      haveKids = 1;
-
-      if (p->state == ZOMBIE) {
-        pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        p->state = UNUSED;
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
-        *stack = p->stack;
-        release(&ptable.lock);
-        return pid;
-      }
-    }
-    
-    if (!haveKids || proc->killed) {
-      release(&ptable.lock);
-      return -1;
-}
-sleep(proc, &ptable.lock);
-
+int clone(void *(*func) (void *), void *arg, void *stack){
+  int i,pid;
+  struct proc *np;
+  if((np = allocproc()) == 0) return -1;
+  np->state = UNUSED;
+  np->sz = proc->sz;
+  np->parent = proc;
+  *np->tf = *proc->tf;
+  np->pgdir = proc->pgdir;
+  np->tf->eax = 0;
+  np->tf->eip = (int)func;
+  np->stack = (int)stack;
+  for(i = 0; i < NOFILE; i++){
+    if(proc->ofile[i]) np->ofile[i] = filedup(proc->ofile[i]);
   }
-  return 0;
+  np->cwd = idup(proc->cwd);
+  np->tf->esp = (int)(stack+PGSIZE-4);
+  *((int*)(np->tf->esp)) = (int)arg;
+  *((int*)(np->tf->esp)-4) = 0xFFFFFFFF;
+  np->tf->esp =(np->tf->esp) -4;
+  safestrcpy(np->name, proc->name, sizeof(proc->name));
+  pid = np->pid;
+  acquire(&ptable.lock);
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+  return pid;
 }
 
+int join(int pid, void **stack, void **retval){
+  struct proc *p;
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->pid != pid) continue;
+    else{
+      while(p->state != ZOMBIE) sleep(proc, &ptable.lock);
+      stack = (void **)p->stack;
+      *(int*)retval = p->tf->esp;
+      p->pid = 0;
+      p->parent = 0;
+      p->name[0] = 0;
+      p->killed = 0;
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
 // END CHANGES
 
 //PAGEBREAK: 36
