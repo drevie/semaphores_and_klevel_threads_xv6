@@ -141,6 +141,7 @@ static int (*syscalls[])(void) = {
 [SYS_sem_signal] sys_sem_signal,
 [SYS_clone]   sys_clone,
 [SYS_join] sys_join,
+[SYS_texit] sys_texit;
 // END CHANGES
 };
 
