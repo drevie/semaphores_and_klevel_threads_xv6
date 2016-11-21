@@ -613,44 +613,25 @@ int clone(void *(*func) (void *), void *arg, void *stack){
 // join syscall
 // similar to wait
 int join(int pid, void **stack, void **retval){
-
-  // proc pointer
   struct proc *p;
-
-  // Aquire lock
   acquire(&ptable.lock);
-
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    // Check for error
-    if(p->pid != pid) 
-      continue;
+    if(p->pid != pid) continue;
     else{
-      // Sleep until thread specified 
-      // by pid arguements is destroyed 
-      // aka the process state becomes zombie
-      while(p->state != ZOMBIE) 
-        sleep(proc, &ptable.lock);
-      // copy the address of the threads stack
+      while(p->state != ZOMBIE) sleep(proc, &ptable.lock);
       stack = (void **)p->stack;
       *(int*)retval = p->tf->esp;
       p->pid = 0;
       p->parent = 0;
       p->name[0] = 0;
       p->killed = 0;
-
-      // release lock
       release(&ptable.lock);
-      
-      // success
       return 0;
     }
   }
   release(&ptable.lock);
-
-  // Return -1 on error
   return -1;
 }
-
 
 
 // texit syscall
