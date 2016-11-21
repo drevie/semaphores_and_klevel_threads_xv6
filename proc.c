@@ -633,10 +633,10 @@ int join(int pid, void **stack, void **retval){
       // copy the address of the threads stack
       stack = (void **)p->stack;
       *(int*)retval = p->tf->esp;
-      p->parent = 0;
       p->pid = 0;
-      p->killed[0] = 0;
-      p->name = 0;
+      p->parent = 0;
+      p->name[0] = 0;
+      p->killed = 0;
       // release lock
       release(&ptable.lock);
       
