@@ -637,12 +637,12 @@ int join(int pid, void **stack, void **retval){
       p->parent = 0;
       p->name[0] = 0;
       p->killed = 0;
+
       // release lock
       release(&ptable.lock);
       
-      // return 0 
-      return 0;
       // success
+      return 0;
     }
   }
   release(&ptable.lock);
