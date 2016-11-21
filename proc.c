@@ -455,16 +455,25 @@ kill(int pid)
   return -1;
 }
 
-// BEGIN CHANGES
+// BEGIN CHANGES:
+// Real implementation of system call methods
+
 // PART 1
-
-
 // sem_init syscall
 int sem_init(int semId, int n){
 
-  if(semId < 0 || semId > 31) return -1;
-  if(semaphore_array[semId].active==1)  return -1;
+  // Make sure the semaphore is valid
+  if(semId > 31 || semId < 0)
+   return -1;
+
+  // make sure that this semaphore is not 
+  // already active
+  if(semaphore_array[semId].active==1) 
+   return -1;
+
+  // Activate the semaphore
   semaphore_array[semId].active = 1;
+  // Set semaphore value to input
   semaphore_array[semId].value = n;
 
   return 0;
@@ -473,10 +482,18 @@ int sem_init(int semId, int n){
 // sem_destroy syscall
 int sem_destroy(int semId){
 
-  if(semId < 0 || semId > 31) return -1;
-  if(semaphore_array[semId].active==0) return -1;
-  semaphore_array[semId].active = 0;
+  // Make sure the semaphore id is valid
+  if(semId > 31 || semId < 0) 
+    return -1;
+
+  // Make sure the semaphore is active
+  if(semaphore_array[semId].active==0)
+   return -1;
+
+  // deactivate the semaphore
   semaphore_array[semId].value = 0;
+  semaphore_array[semId].active = 0;
+
   return 0;
 
 }
@@ -484,38 +501,54 @@ int sem_destroy(int semId){
 // sem_wait syscall
 int sem_wait(int semId){
 
-  if(semId < 0 || semId > 31) 
+  // Check that the sempahore Id is valid
+  if(semId > 31 || semId < 0) 
     return -1;
+  // Check the semaphores active status
   if(semaphore_array[semId].active==0) 
     return -1;
+  // Check the semaphores value
   if(semaphore_array[semId].value<0) 
     return -1;
 
+  // acquire lock
   acquire(&semaphore_array[semId].lock);
+  // sleep while the semaphores value is 0
   while(semaphore_array[semId].value==0) 
     sleep(&semaphore_array[semId], &semaphore_array[semId].lock);
 
+  // After sempahore finished sleeping reduce the value back to 0
   semaphore_array[semId].value--;
+
+  // Release the lock
   release(&semaphore_array[semId].lock);
+
   return 0;
 }
 
 // sem_signal syscall
 int sem_signal(int semId){
 
-  if(semId < 0 || semId > 31) 
+  // Make sure the id is valid
+  if(semId > 31 || semId < 0) 
     return -1;
+  // Make sure the semaphore is active
   if(semaphore_array[semId].active==0) 
     return -1;
+  // Make sure that the semaphore value is not negative
   if(semaphore_array[semId].value<0) 
     return -1;
 
+  // acquire the lock
   acquire(&semaphore_array[semId].lock);
+  // Increment the value
   semaphore_array[semId].value++;
 
-  if(semaphore_array[semId].value>0) 
+  // Wakeup sleeping semaphore
+  if(semaphore_array[semId].value > 0) 
     wakeup(&semaphore_array[semId]);
 
+  // release the lock
   release(&semaphore_array[semId].lock);
 
   return 0;
@@ -525,12 +558,17 @@ int sem_signal(int semId){
 
 // clone syscall
 int clone(void *(*func) (void *), void *arg, void *stack){
-  int i,pid;
-  struct proc *np;
+  int count
+  int pid;
+
+  // Create proc
+  struct proc;
+  struct *np;
 
   if((np = allocproc()) == 0) 
     return -1;
 
+  // assign proc fields
   np->state = UNUSED;
   np->sz = proc->sz;
   np->parent = proc;
@@ -540,8 +578,8 @@ int clone(void *(*func) (void *), void *arg, void *stack){
   np->tf->eip = (int)func;
   np->stack = (int)stack;
 
-  for(i = 0; i < NOFILE; i++)
-    if(proc->ofile[i]) np->ofile[i] = filedup(proc->ofile[i]);
+  for(count = 0; count < NOFILE; count++)
+    if(proc->ofile[count]) np->ofile[count] = filedup(proc->ofile[count]);
   
   np->cwd = idup(proc->cwd);
   np->tf->esp = (int)(stack+PGSIZE-4);
@@ -595,6 +633,8 @@ int join(int pid, void **stack, void **retval){
 void texit(void *retval){
 
   struct proc *p;
+
+  // initialize file descriptor
   int fd;
 
   if(proc == initproc) 
@@ -624,6 +664,7 @@ void texit(void *retval){
   }
   *(int *)(proc->tf->esp) =*(int*)retval;
   proc->state = ZOMBIE;
+
   sched();
   panic("zombie exit");
 }

@@ -68,6 +68,8 @@ struct proc {
   char name[16];               // Process name (debugging)
 
   // BEGIN CHANGES
+  // add stack for processes to use
+  // Needed for join
   int stack; 
   // END CHANGES
 };

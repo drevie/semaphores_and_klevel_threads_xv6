@@ -90,7 +90,8 @@ sys_uptime(void)
   return xticks;
 }
 
-// BEGIN CHANGES
+// BEGIN CHANGES:
+
 int sys_sem_init(void){
   int semId,n;
 
@@ -175,7 +176,7 @@ int sys_join(void){
     return -1;
 
   return_val = (void **)temp_val;
-  
+
   return join(pid,stack,return_val);
 }
 // CHANGES END
