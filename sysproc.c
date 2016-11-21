@@ -179,11 +179,19 @@ int sys_texit(void){
 int sys_join(void){
   void ** stack,**retval;
   int pid,temp;
-  if(argint(0,&pid) < 0) return -1;
-  if(argint(1,&temp) < 0) return -1;
+
+  if(argint(0,&pid) < 0) 
+    return -1;
+  if(argint(1,&temp) < 0) 
+    return -1;
+  if(argint(2,&temp) < 0) 
+    return -1;
+
   stack = (void **)temp;
-  if(argint(2,&temp) < 0) return -1;
+
+ 
   retval = (void **)temp;
+
   return join(pid,stack,retval);
 }
 // CHANGES END
