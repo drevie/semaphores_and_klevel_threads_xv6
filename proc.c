@@ -558,7 +558,7 @@ int sem_signal(int semId){
 
 // clone syscall
 int clone(void *(*func) (void *), void *arg, void *stack){
-  int count
+  int count;
   int pid;
 
   // Create proc
