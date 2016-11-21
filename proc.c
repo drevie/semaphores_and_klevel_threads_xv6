@@ -562,8 +562,7 @@ int clone(void *(*func) (void *), void *arg, void *stack){
   int pid;
 
   // Create proc
-  struct proc;
-  struct *np;
+  struct proc *np;
 
   if((np = allocproc()) == 0) 
     return -1;
