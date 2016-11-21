@@ -12,6 +12,32 @@ struct {
   struct proc proc[NPROC];
 } ptable;
 
+// BEGIN CHANGES:
+// Create semphore struct<
+struct semaphore {
+  int value;
+  int active;
+  struct spinlock lock;
+} 
+
+// Create semaphore array
+semaphore_array[32];
+
+// Create semaphore table
+void semaphore_array_init(){
+
+  int semId;
+
+  for(semId=0; semId<32; semId++){
+    semaphore_array[semId].value=0;
+    semaphore_array[semId].active=0;
+    initlock(&semaphore_array[semId].lock, "semlock");
+  }
+
+}
+
+
+// END CHANGES
 
 
 static struct proc *initproc;
@@ -432,84 +458,72 @@ kill(int pid)
 // BEGIN CHANGES
 // PART 1
 
-struct semaphore {
-  int value;
-  int active;
-  struct spinlock lock;
-} 
 
-sem_tbl[32];
-
-void sem_tbl_init(){
-
-  int semId;
-
-  for(semId=0; semId<32; semId++){
-    sem_tbl[semId].value=0;
-    sem_tbl[semId].active=0;
-    initlock(&sem_tbl[semId].lock, "semlock");
-  }
-
-}
-
+// sem_init syscall
 int sem_init(int semId, int n){
 
   if(semId < 0 || semId > 31) return -1;
-  if(sem_tbl[semId].active==1)  return -1;
-  sem_tbl[semId].active = 1;
-  sem_tbl[semId].value = n;
+  if(semaphore_array[semId].active==1)  return -1;
+  semaphore_array[semId].active = 1;
+  semaphore_array[semId].value = n;
 
   return 0;
 }
 
+// sem_destroy syscall
 int sem_destroy(int semId){
 
   if(semId < 0 || semId > 31) return -1;
-  if(sem_tbl[semId].active==0) return -1;
-  sem_tbl[semId].active = 0;
-  sem_tbl[semId].value = 0;
+  if(semaphore_array[semId].active==0) return -1;
+  semaphore_array[semId].active = 0;
+  semaphore_array[semId].value = 0;
   return 0;
 
 }
 
+// sem_wait syscall
 int sem_wait(int semId){
 
   if(semId < 0 || semId > 31) 
     return -1;
-  if(sem_tbl[semId].active==0) 
+  if(semaphore_array[semId].active==0) 
     return -1;
-  if(sem_tbl[semId].value<0) 
+  if(semaphore_array[semId].value<0) 
     return -1;
 
-  acquire(&sem_tbl[semId].lock);
-  while(sem_tbl[semId].value==0) 
-    sleep(&sem_tbl[semId], &sem_tbl[semId].lock);
+  acquire(&semaphore_array[semId].lock);
+  while(semaphore_array[semId].value==0) 
+    sleep(&semaphore_array[semId], &semaphore_array[semId].lock);
 
-  sem_tbl[semId].value--;
-  release(&sem_tbl[semId].lock);
+  semaphore_array[semId].value--;
+  release(&semaphore_array[semId].lock);
   return 0;
 }
 
+// sem_signal syscall
 int sem_signal(int semId){
 
   if(semId < 0 || semId > 31) 
     return -1;
-  if(sem_tbl[semId].active==0) 
+  if(semaphore_array[semId].active==0) 
     return -1;
-  if(sem_tbl[semId].value<0) 
+  if(semaphore_array[semId].value<0) 
     return -1;
 
-  acquire(&sem_tbl[semId].lock);
-  sem_tbl[semId].value++;
+  acquire(&semaphore_array[semId].lock);
+  semaphore_array[semId].value++;
 
-  if(sem_tbl[semId].value>0) 
-    wakeup(&sem_tbl[semId]);
+  if(semaphore_array[semId].value>0) 
+    wakeup(&semaphore_array[semId]);
 
-  release(&sem_tbl[semId].lock);
+  release(&semaphore_array[semId].lock);
 
   return 0;
 }
 
+// BEGIN PART 2 syscalls
+
+// clone syscall
 int clone(void *(*func) (void *), void *arg, void *stack){
   int i,pid;
   struct proc *np;
@@ -546,6 +560,7 @@ int clone(void *(*func) (void *), void *arg, void *stack){
   return pid;
 }
 
+// join syscall
 int join(int pid, void **stack, void **retval){
 
   struct proc *p;
@@ -574,6 +589,9 @@ int join(int pid, void **stack, void **retval){
   return -1;
 }
 
+
+
+// texit syscall
 void texit(void *retval){
 
   struct proc *p;
@@ -596,7 +614,7 @@ void texit(void *retval){
   proc->cwd = 0;
   acquire(&ptable.lock);
   wakeup1(proc->parent);
-  
+
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == proc){
       p->parent = initproc;

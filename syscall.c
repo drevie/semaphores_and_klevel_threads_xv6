@@ -101,10 +101,12 @@ extern int sys_uptime(void);
 extern int sys_halt(void);
 
 // BEGIN CHANGES
+// PART 1
 extern int sys_sem_init(void);
 extern int sys_sem_destroy(void);
 extern int sys_sem_wait(void);
 extern int sys_sem_signal(void);
+// PART 2
 extern int sys_clone(void);
 extern int sys_join(void);
 extern int sys_texit(void);
@@ -135,10 +137,12 @@ static int (*syscalls[])(void) = {
 [SYS_halt]    sys_halt,
 
 // BEGIN CHANGES
+// PART 1
 [SYS_sem_init] sys_sem_init,
 [SYS_sem_destroy] sys_sem_destroy,
 [SYS_sem_wait] sys_sem_wait,
 [SYS_sem_signal] sys_sem_signal,
+// PART 2
 [SYS_clone]   sys_clone,
 [SYS_join] sys_join,
 [SYS_texit] sys_texit,

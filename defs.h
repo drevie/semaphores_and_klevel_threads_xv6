@@ -120,10 +120,12 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 // BEGIN CHANGES:
-void            sem_tbl_init(void);
+// PART 1
+void            semaphore_array_init(void);
 int             sem_init(int semId, int n);
 int             sem_destroy(int semId);
 int             sem_wait(int semId);
+// PART 2
 int             sem_signal(int semId);
 int             clone(void *(*func) (void *), void *arg, void *stack);
 int             join(int pid, void **stack, void **retval);

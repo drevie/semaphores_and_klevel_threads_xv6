@@ -93,59 +93,90 @@ sys_uptime(void)
 // BEGIN CHANGES
 int sys_sem_init(void){
   int semId,n;
-  if(argint(0, &semId) < 0) return -1;
-  if(argint(1, &n) < 0) return -1;
+
+  if(argint(0, &semId) < 0) 
+    return -1;
+  if(argint(1, &n) < 0) 
+    return -1;
+
   return sem_init(semId,n);
 }
 
 int sys_sem_destroy(void){
   int semId;
-  if(argint(0,&semId) < 0) return -1;
+
+  if(argint(0,&semId) < 0)
+    return -1;
+
   return sem_destroy(semId);
 }
 
 int sys_sem_wait(void){
   int semId;
-  if(argint(0,&semId) < 0) return -1;
+
+  if(argint(0,&semId) < 0) 
+    return -1;
+
   return sem_wait(semId);
 }
 
 int sys_sem_signal(void){
   int semId;
-  if(argint(0,&semId) < 0) return -1;
+
+  if(argint(0,&semId) < 0) 
+    return -1;
+
   return sem_signal(semId);
 }
 
 int sys_clone(void){
-  void * arg0, *arg1,*stack;
-  int temp;
-  if(argint(0, &temp) < 0) return -1;
-  arg0 = (void *)temp;
-  if(argint(1, &temp) < 0) return -1;
-  arg1 = (void *)temp;
-  if(argint(2, &temp) < 0) return -1;
-  stack = (void *)temp;
-  return clone(arg0,arg1,stack);
+
+  void *x, *y,*stack;
+  int temp_val;
+
+  if(argint(0, &temp_val) < 0) 
+    return -1;
+
+  x = (void *)temp_val;
+  if(argint(1, &temp_val) < 0) 
+    return -1;
+
+  y = (void *)temp_val;
+  if(argint(2, &temp_val) < 0) 
+    return -1;
+
+  stack = (void *)temp_val;
+
+  return clone(x,y,stack);
 }
 
 int sys_texit(void){
-  void *retval;
-  int temp;
-  if(argint(0,&temp) < 0) return -1;
-  retval = (void*)temp;
-  texit(retval);
+  void *return_val;
+  int temp_val;
+
+  if(argint(0,&temp_val) < 0) 
+    return -1;
+
+  return_val = (void*)temp_val;
+  texit(return_val);
   return 0;
 }
 
 int sys_join(void){
-  void ** stack,**retval;
-  int pid,temp;
-  if(argint(0,&pid) < 0) return -1;
-  if(argint(1,&temp) < 0) return -1;
-  stack = (void **)temp;
-  if(argint(2,&temp) < 0) return -1;
-  retval = (void **)temp;
-  return join(pid,stack,retval);
+  void ** stack,**return_val;
+  int pid,temp_val;
+
+  if(argint(0,&pid) < 0) 
+    return -1;
+  if(argint(1,&temp_val) < 0) 
+    return -1;
+  stack = (void **)temp_val;
+  if(argint(2,&temp_val) < 0) 
+    return -1;
+
+  return_val = (void **)temp_val;
+  
+  return join(pid,stack,return_val);
 }
 // CHANGES END
 

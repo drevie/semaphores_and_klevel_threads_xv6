@@ -29,7 +29,6 @@ main(void)
   uartinit();      // serial port
   pinit();         // process table
   tvinit();        // trap vectors
-  sem_tbl_init();  // CHANGE----------------
   binit();         // buffer cache
   fileinit();      // file table
   iinit();         // inode cache
@@ -41,6 +40,10 @@ main(void)
   userinit();      // first user process
   // Finish setting up this processor in mpmain.
   mpmain();
+
+  // BEGIN CHANGES
+  semaphore_array_init();
+  // END CHANGES
 }
 
 // Other CPUs jump here from entryother.S.
