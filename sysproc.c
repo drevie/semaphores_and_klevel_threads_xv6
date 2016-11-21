@@ -160,6 +160,22 @@ int sys_clone(void){
 }
 
 
+
+int sys_texit(void){
+  void *retval;
+  int temp_val;
+
+
+  if(argint(0,&temp_val) < 0) 
+    return -1;
+
+  retval = (void*)temp_val;
+  texit(retval);
+  
+  return 0;
+}
+
+
 int sys_join(void){
   void ** stack,**retval;
   int pid,temp_val;
@@ -175,20 +191,6 @@ int sys_join(void){
   retval = (void **)temp_val;
 
   return join(pid,stack,retval);
-}
-
-int sys_texit(void){
-  void *retval;
-  int temp_val;
-
-
-  if(argint(0,&temp_val) < 0) 
-    return -1;
-
-  retval = (void*)temp_val;
-  texit(retval);
-  
-  return 0;
 }
 // CHANGES END
 
