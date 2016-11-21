@@ -579,11 +579,12 @@ int clone(void *(*func) (void *), void *arg, void *stack){
   np->state = UNUSED;
   np->sz = proc->sz;
   np->parent = proc;
+  *np->tf = *proc->tf;
   np->pgdir = proc->pgdir;
   np->tf->eax = 0;
   np->tf->eip = (int)func;
   np->stack = (int)stack;
-  *np->tf = *proc->tf;
+ 
 
   for(count = 0; count < NOFILE; count++)
     if(proc->ofile[count]) np->ofile[count] = filedup(proc->ofile[count]);
