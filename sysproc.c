@@ -95,6 +95,7 @@ sys_uptime(void)
 int sys_sem_init(void){
   int semId,n;
 
+  // make sure sem is valid
   if(argint(0, &semId) < 0) 
     return -1;
   if(argint(1, &n) < 0) 
@@ -106,6 +107,7 @@ int sys_sem_init(void){
 int sys_sem_destroy(void){
   int semId;
 
+  // make sure sem is valid
   if(argint(0,&semId) < 0)
     return -1;
 
@@ -115,6 +117,7 @@ int sys_sem_destroy(void){
 int sys_sem_wait(void){
   int semId;
 
+  // make sure sem is valid
   if(argint(0,&semId) < 0) 
     return -1;
 
@@ -124,6 +127,7 @@ int sys_sem_wait(void){
 int sys_sem_signal(void){
   int semId;
 
+  // make sure sem is valid  
   if(argint(0,&semId) < 0) 
     return -1;
 
@@ -135,36 +139,29 @@ int sys_clone(void){
   void *x, *y,*stack;
   int temp_val;
 
+  // make sure sem is valid
   if(argint(0, &temp_val) < 0) 
     return -1;
 
+  // make sure sem is valid
   x = (void *)temp_val;
   if(argint(1, &temp_val) < 0) 
     return -1;
 
+  // make sure sem is valid
   y = (void *)temp_val;
   if(argint(2, &temp_val) < 0) 
     return -1;
 
+  // set stack
   stack = (void *)temp_val;
 
   return clone(x,y,stack);
 }
 
-int sys_texit(void){
-  void *return_val;
-  int temp_val;
-
-  if(argint(0,&temp_val) < 0) 
-    return -1;
-
-  return_val = (void*)temp_val;
-  texit(return_val);
-  return 0;
-}
 
 int sys_join(void){
-  void ** stack,**return_val;
+  void ** stack,**retval;
   int pid,temp_val;
 
   if(argint(0,&pid) < 0) 
@@ -175,9 +172,23 @@ int sys_join(void){
   if(argint(2,&temp_val) < 0) 
     return -1;
 
-  return_val = (void **)temp_val;
+  retval = (void **)temp_val;
 
-  return join(pid,stack,return_val);
+  return join(pid,stack,retval);
+}
+
+int sys_texit(void){
+  void *retval;
+  int temp_val;
+
+
+  if(argint(0,&temp_val) < 0) 
+    return -1;
+
+  retval = (void*)temp_val;
+  texit(retval);
+  
+  return 0;
 }
 // CHANGES END
 

@@ -135,7 +135,6 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_halt]    sys_halt,
-
 // BEGIN CHANGES
 // PART 1
 [SYS_sem_init] sys_sem_init,

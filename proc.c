@@ -476,6 +476,7 @@ int sem_init(int semId, int n){
   // Set semaphore value to input
   semaphore_array[semId].value = n;
 
+  // success
   return 0;
 }
 
@@ -494,6 +495,7 @@ int sem_destroy(int semId){
   semaphore_array[semId].value = 0;
   semaphore_array[semId].active = 0;
 
+  // success
   return 0;
 
 }
@@ -517,12 +519,14 @@ int sem_wait(int semId){
   while(semaphore_array[semId].value==0) 
     sleep(&semaphore_array[semId], &semaphore_array[semId].lock);
 
-  // After sempahore finished sleeping reduce the value back to 0
+  // After sempahore finished sleeping decrement the sems 
+  // value
   semaphore_array[semId].value--;
 
   // Release the lock
   release(&semaphore_array[semId].lock);
 
+  // success
   return 0;
 }
 
@@ -541,27 +545,31 @@ int sem_signal(int semId){
 
   // acquire the lock
   acquire(&semaphore_array[semId].lock);
-  // Increment the value
+  // Increment the sems value by one
   semaphore_array[semId].value++;
 
-  // Wakeup sleeping semaphore
+  // Check if any processes are waiting
+  // If true wakeup (unblock) one process
   if(semaphore_array[semId].value > 0) 
     wakeup(&semaphore_array[semId]);
 
   // release the lock
   release(&semaphore_array[semId].lock);
 
+  // success
   return 0;
 }
 
 // BEGIN PART 2 syscalls
 
 // clone syscall
+// Lightweigth version of fork 
+// Create a new proc 
 int clone(void *(*func) (void *), void *arg, void *stack){
   int count;
   int pid;
 
-  // Create proc
+  // Create proc pointer
   struct proc *np;
 
   if((np = allocproc()) == 0) 
@@ -571,11 +579,11 @@ int clone(void *(*func) (void *), void *arg, void *stack){
   np->state = UNUSED;
   np->sz = proc->sz;
   np->parent = proc;
-  *np->tf = *proc->tf;
   np->pgdir = proc->pgdir;
   np->tf->eax = 0;
   np->tf->eip = (int)func;
   np->stack = (int)stack;
+  *np->tf = *proc->tf;
 
   for(count = 0; count < NOFILE; count++)
     if(proc->ofile[count]) np->ofile[count] = filedup(proc->ofile[count]);
@@ -589,48 +597,69 @@ int clone(void *(*func) (void *), void *arg, void *stack){
   safestrcpy(np->name, proc->name, sizeof(proc->name));
 
   pid = np->pid;
+
+  // Acquire lock
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
+
+  // Release lock
   release(&ptable.lock);
 
+  // Return the pid of the new thread
   return pid;
 }
 
 // join syscall
+// similar to wait
 int join(int pid, void **stack, void **retval){
 
+  // proc pointer
   struct proc *p;
+
+  // Aquire lock
   acquire(&ptable.lock);
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    // Check for error
     if(p->pid != pid) 
       continue;
     else{
-
+      // Sleep until thread specified 
+      // by pid arguements is destroyed 
+      // aka the process state becomes zombie
       while(p->state != ZOMBIE) 
         sleep(proc, &ptable.lock);
-
+      // copy the address of the threads stack
       stack = (void **)p->stack;
       *(int*)retval = p->tf->esp;
-      p->pid = 0;
       p->parent = 0;
-      p->name[0] = 0;
-      p->killed = 0;
+      p->pid = 0;
+      p->killed[0] = 0;
+      p->name = 0;
+      // release lock
       release(&ptable.lock);
-
+      
+      // return 0 
       return 0;
+      // success
     }
   }
   release(&ptable.lock);
+
+  // Return -1 on error
   return -1;
 }
 
 
 
 // texit syscall
+// similar to exit
+// takes a pointer that should be passed to
+// caller of join
 void texit(void *retval){
 
+  // proc pointer
   struct proc *p;
 
   // initialize file descriptor
@@ -661,6 +690,7 @@ void texit(void *retval){
         wakeup1(initproc);
     }
   }
+
   *(int *)(proc->tf->esp) =*(int*)retval;
   proc->state = ZOMBIE;
 
